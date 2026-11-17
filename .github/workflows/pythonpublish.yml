@@ -4,13 +4,24 @@ on:
   release:
     types: [created]
 
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   deploy:
+    name: deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # to fetch code (actions/checkout)
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@50fbc622fc4ef5163becd7fab6573eac35f8462e # v1.2.0
+      with:
+        persist-credentials: false
     - name: Set up Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@0f07f7f756721ebd886c2462646a35f78a8bc4de # v1.2.4
       with:
         python-version: '3.x'
     - name: Install dependencies
@@ -19,8 +30,8 @@ jobs:
         pip install setuptools wheel twine
     - name: Build and publish
       env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }} # zizmor: ignore[secrets-outside-env] upstream PyPI credentials; no environment here
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }} # zizmor: ignore[secrets-outside-env] upstream PyPI credentials; no environment here
+      run: | # zizmor: ignore[use-trusted-publishing] upstream publishes with twine and a password
         python setup.py sdist bdist_wheel
         twine upload dist/*
