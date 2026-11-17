@@ -6,10 +6,18 @@ on:
     branches:
       - master
 
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   lint_and_test:
     name: Linting and Testing
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # to fetch code (actions/checkout)
     strategy:
       matrix:
         python-version: [ 3.7, 3.8, 3.9 ]
@@ -17,6 +25,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2.3.4
@@ -36,6 +46,8 @@ jobs:
     name: Integration Testing
     runs-on: ubuntu-latest
     environment: ci_tests
+    permissions:
+      contents: read # to fetch code (actions/checkout)
     strategy:
       matrix:
         python-version: [ 3.8 ]
@@ -46,6 +58,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2.3.4
